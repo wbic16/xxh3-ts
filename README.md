@@ -1,15 +1,29 @@
-# xxh3-ts
-xxhash implementation in pure typescript (using tc39 bigint), supports XXH64 & XXH3-128.
-These algorithms require Node.js >=12.x, because of `Buffer::readBigUInt64LE`
+# xxh3-ts 1.0.7 (WIP)
+
+WARNING: Changes from 0.7.0 to 0.8.2 are being ported. TODO list:
+* Detailed test coverage for sub-routines
+* XXH3_len_9to16_128b
+* XXH3_len_4to8_128b
+* XXH3_len_1to3_128b
+* XXH3_len_0to16_128b
+* XXH3_len_17to128_128b
+* XXH3_len_129to240_128b
+* XXH3_avalanche
+
+xxhash-ts implements XXH64 and XXH3-128 in pure typescript using tc39 bigint.
+These algorithms require Node.js >=12.x, due to `Buffer::readBigUInt64LE`.
 
 ## Usage:
 ```ts
-import { XXH64 } from 'xxh3-ts';
+import { XXH3-128 } from 'xxh3-ts';
 import { Buffer } from 'buffer';
 
-let hash: bigint = XXH64(Buffer.from(JSON.stringify(v)))
+let hash: bigint = XXH3-128(Buffer.from(JSON.stringify(v)))
 ```
-For conversion back to buffer it's recommended to use [bigint-buffer](https://www.npmjs.com/package/bigint-buffer) package or the following snippet:
+
+If you need the raw buffer, consider the [bigint-buffer](https://www.npmjs.com/package/bigint-buffer) package.
+
+Or just use the following snippet:
 ```ts
 function toBufferBE(num: bigint): Buffer {
   const hex = num.toString(16);
@@ -18,10 +32,12 @@ function toBufferBE(num: bigint): Buffer {
 }
 ```
 
-## XXH64
-XXH64 was derived from the specifications at https://github.com/Cyan4973/xxHash/blob/v0.7.0/doc/xxhash_spec.md
+## Porting Notes
 
-## XXH3-128
-XXH3-128 was ported from https://github.com/Cyan4973/xxHash/blob/v0.7.0/xxh3.h
+Between xxhash 0.7.0 and 0.8.2, many low-level optimizations were added.
+This port aims to retain the elegance of the xxhash algorithm with a minimum amount of fuss.
+It is not as highly-optimized, but runs on any JS environment (including vite).
 
-As there is no specificatino for XXH3 in the specification documents.
+If you want a faster implementation, you should look at a native port.
+
+XXH64 and XXH3-128 were derived from the specifications at https://github.com/Cyan4973/xxHash/blob/v0.8.2/doc/xxhash_spec.md and the source at https://github.com/Cyan4973/xxHash/blob/v0.8.2/xxh3.h.

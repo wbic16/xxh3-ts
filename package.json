@@ -2,15 +2,14 @@
   "name": "xxh3-ts",
   "main": "./index.js",
   "types": "./index.d.ts",
-  "description": "xxhash implementation in pure typescript (using tc39 bigint), supports XXH64 & XXH3-128",
-  "version": "1.0.6",
+  "description": "xxhash implementation designed to match xxhash v0.8.2 and xxhash_rust::xxh3::xxh3_128",
+  "version": "1.0.7",
   "scripts": {
-    "prebuild": "rm -rf ./*.js ./*.d.ts",
     "build": "tsc",
     "prepublishOnly": "yarn build"
   },
-  "repository": "https://github.com/i404788/xxh3-ts",
-  "author": "casper@devdroplets.com",
+  "repository": "https://github.com/wbic16/xxh3-ts",
+  "author": "wbic16@gmail.com",
   "license": "BSD-2 Clause",
   "devDependencies": {
     "@types/node": "^12.12.21"

@@ -3,22 +3,61 @@ if (!(globalThis as any).Buffer) {
 }
 
 const n = (n: number | string) => BigInt(n)
+const PRIME32_1 = n('0x9E3779B1');           // 0b10011110001101110111100110110001
+const PRIME32_2 = n('0x85EBCA77');           // 0b10000101111010111100101001110111
+const PRIME32_3 = n('0xC2B2AE3D');           // 0b11000010101100101010111000111101
 const PRIME64_1 = n('0x9E3779B185EBCA87');   /* 0b1001111000110111011110011011000110000101111010111100101010000111 */
 const PRIME64_2 = n('0xC2B2AE3D27D4EB4F');   /* 0b1100001010110010101011100011110100100111110101001110101101001111 */
 const PRIME64_3 = n('0x165667B19E3779F9');   /* 0b0001011001010110011001111011000110011110001101110111100111111001 */
 const PRIME64_4 = n('0x85EBCA77C2B2AE63');   /* 0b1000010111101011110010100111011111000010101100101010111001100011 */
 const PRIME64_5 = n('0x27D4EB2F165667C5');
-const kkey = Buffer.from('b8fe6c3923a44bbe7c01812cf721ad1cded46de9839097db7240a4a4b7b3671fcb79e64eccc0e578825ad07dccff7221b8084674f743248ee03590e6813a264c3c2852bb91c300cb88d0658b1b532ea371644897a20df94e3819ef46a9deacd8a8fa763fe39c343ff9dcbbc7c70b4f1d8a51e04bcdb45931c89f7ec9d9787364eac5ac8334d3ebc3c581a0fffa1363eb170ddd51b7f0da49d316552629d4689e2b16be587d47a1fc8ff8b8d17ad031ce45cb3a8f95160428afd7fbcabb4b407e', 'hex')
+const PRIME_MX1 = n('0x165667919E3779F9');   // 0b0001011001010110011001111001000110011110001101110111100111111001
+const PRIME_MX2 = n('0x9FB21C651E98DF25');   // 0b1001111110110010000111000110010100011110100110001101111100100101
+
+// note: defaultSecret == kkey - the written out u64s are just for convenience
+const kkey = Buffer.from('b8fe6c3923a44bbe7c01812cf721ad1cded46de9839097db7240a4a4b7b3671fcb79e64eccc0e578825ad07dccff7221b8084674f743248ee03590e6813a264c3c2852bb91c300cb88d0658b1b532ea371644897a20df94e3819ef46a9deacd8a8fa763fe39c343ff9dcbbc7c70b4f1d8a51e04bcdb45931c89f7ec9d9787364eac5ac8334d3ebc3c581a0fffa1363eb170ddd51b7f0da49d316552629d4689e2b16be587d47a1fc8ff8b8d17ad031ce45cb3a8f95160428afd7fbcabb4b407e', 'hex');
+const defaultSecret0  = n('0xb8fe6c3923a44bbe');
+const defaultSecret1  = n('0x7c01812cf721ad1c');
+const defaultSecret2  = n('0xded46de9839097db');
+const defaultSecret3  = n('0x7240a4a4b7b3671f');
+const defaultSecret4  = n('0xcb79e64eccc0e578');
+const defaultSecret5  = n('0x825ad07dccff7221');
+const defaultSecret6  = n('0xb8084674f743248e');
+const defaultSecret7  = n('0xe03590e6813a264c');
+const defaultSecret8  = n('0x3c2852bb91c300cb');
+const defaultSecret9  = n('0x88d0658b1b532ea3');
+const defaultSecret10 = n('0x71644897a20df94e');
+const defaultSecret11 = n('0x3819ef46a9deacd8');
+const defaultSecret12 = n('0xa8fa763fe39c343f');
+const defaultSecret13 = n('0xf9dcbbc7c70b4f1d');
+const defaultSecret14 = n('0x8a51e04bcdb45931');
+const defaultSecret15 = n('0xc89f7ec9d9787364');
+const defaultSecret16 = n('0xeac5ac8334d3ebc3');
+const defaultSecret17 = n('0xc581a0fffa1363eb');
+const defaultSecret18 = n('0x170ddd51b7f0da49');
+const defaultSecret19 = n('0xd316552629d4689e');
+const defaultSecret20 = n('0x2b16be587d47a1fc');
+const defaultSecret21 = n('0x8ff8b8d17ad031ce');
+const defaultSecret22 = n('0x45cb3a8f95160428');
+const defaultSecret23 = n('0xafd7fbcabb4b407e');
+
 const mask64 = (n(1) << n(64)) - n(1);
 const mask32 = (n(1) << n(32)) - n(1);
-const STRIPE_LEN = 64
-const KEYSET_DEFAULT_SIZE = 48   /* minimum 32 */
-const STRIPE_ELTS = (STRIPE_LEN / 4)
-const ACC_NB = (STRIPE_LEN / 8)
+const STRIPE_LEN = 64;
+const KEYSET_DEFAULT_SIZE = 48;   /* minimum 32 */
+const STRIPE_ELTS = (STRIPE_LEN / 4);
+const ACC_NB = (STRIPE_LEN / 8);
 const _U64 = 8;
 const _U32 = 4;
 
-
+function XXH3_deriveSecret(seed: bigint) {
+  let derivedSecret = new BigUint64Array([defaultSecret0, defaultSecret1, defaultSecret2, defaultSecret3, defaultSecret4, defaultSecret5, defaultSecret6, defaultSecret7, defaultSecret8, defaultSecret9, defaultSecret10, defaultSecret11, defaultSecret12, defaultSecret13, defaultSecret14, defaultSecret15, defaultSecret16, defaultSecret17, defaultSecret18, defaultSecret19, defaultSecret20, defaultSecret21, defaultSecret22, defaultSecret23 ]);
+  for (var i = 0; i < 12; i++) {
+    derivedSecret[i*2] += seed;
+    derivedSecret[i*2+1] -= seed;
+  }
+  return derivedSecret;
+}
 
 // Basically (byte*)buf + offset
 function getView(buf: Buffer, offset: number = 0): Buffer {
@@ -127,7 +166,21 @@ function XXH3_mix16B(data: Buffer, key: Buffer) {
     // data.readBigUInt64LE(data_offset + 8) ^ key.readBigUInt64LE(key_offset + 8));
 }
 
-function XXH3_avalanche(h64: bigint) {
+function XXH32_avalanche(h32: bigint) {
+    h32 ^= h32 >> n(15);
+    h32 *= PRIME32_2;
+    h32 &= mask32;
+    h32 ^= h32 >> n(13);
+    h32 *= PRIME32_3;
+    h32 &= mask32;
+    h32 ^= h32 >> n(16);
+    return h32;
+}
+
+function XXH64_avalanche(h64: bigint) {
+    h64 ^= h64 >> n(33);
+    h64 *= PRIME64_2;
+    h64 &= mask64;
     h64 ^= h64 >> n(29);
     h64 *= PRIME64_3;
     h64 &= mask64;
@@ -135,6 +188,15 @@ function XXH3_avalanche(h64: bigint) {
     return h64;
 }
 
+function XXH3_avalanche(h64: bigint) {
+    h64 ^= h64 >> n(37);
+    h64 *= PRIME_MX1;
+    h64 &= mask64;
+    h64 ^= h64 >> n(32);
+    return h64;
+}
+
+// skipped XXH3_rrmxmx
 
 function XXH3_len_1to3_128b(data: Buffer, key32: Buffer, seed: bigint) {
     const len = data.byteLength
